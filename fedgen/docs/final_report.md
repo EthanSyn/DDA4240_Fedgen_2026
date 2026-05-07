@@ -79,55 +79,17 @@ Federated learning [6] is a machine learning paradigm where models are trained a
 
 ### 3.1 High-Level Topology
 
-FedGen consists of four logical participants deployed as a federated network within a Kubernetes cluster:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                       FedGen Ecosystem                          │
-│                                                                 │
-│  ┌──────────────────┐         ┌──────────────────────────────┐  │
-│  │     Node A        │         │          Node B               │  │
-│  │  Legal Archives   │         │    News Syndicate             │  │
-│  │  (Provider)       │         │  ┌──────────┐ ┌────────────┐ │  │
-│  │  + Wikidata Proxy │         │  │ B-Prov   │ │ B-Cons     │ │  │
-│  └────────┬─────────┘         │  │(Provider)│ │(Consumer)  │ │  │
-│           │                    │  └────┬─────┘ └────────────┘ │  │
-│           │                    └───────┼──────────────────────┘  │
-│           │                            │                         │
-│           ▼                            ▼                         │
-│  ┌─────────────────────────────────────────────┐                │
-│  │        Node D: Federated Catalog             │                │
-│  │   (Crawls & aggregates all provider catalogs)│                │
-│  └─────────────────────────────────────────────┘                │
-│                       ▲                                          │
-│                       │ query                                    │
-│           ┌───────────┴───────────┐                              │
-│           │       Node C          │                              │
-│           │      AI Lab           │                              │
-│           │   (Consumer +         │                              │
-│           │    FL Coordinator)    │                              │
-│           └───────────────────────┘                              │
-│                                                                  │
-│  ┌──────────────────────────────────────────────┐               │
-│  │   FedGen Data Backend (Python HTTP server)   │               │
-│  │   /legal/documents  /news/articles           │               │
-│  │   /legal/live       /news/live               │               │
-│  │   /thirdparty/wikidata                       │               │
-│  └──────────────────────────────────────────────┘               │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-**Figure 1.** FedGen ecosystem topology with four logical nodes, a custom data backend, and external API integrations.
+FedGen consists of four logical participants deployed as a federated network within a Kubernetes cluster. Node A hosts legal archive assets and exposes a governed gateway to Wikidata. Node B represents a News Syndicate and is implemented as two coordinated roles: B-Prov publishes news assets, while B-Cons demonstrates consumer behavior. Node C is the AI Lab consumer and also serves as the federated learning coordinator. Node D is a federated catalog service that aggregates provider catalogs for unified discovery. In addition to the EDC/MVD services, the project deploys a custom FedGen Data Backend that serves static datasets and proxies live external APIs.
 
 ### 3.2 Node Roles
 
-| Node | Role | Description | MVD Connector |
-|------|------|-------------|---------------|
-| **A** | Provider | Legal archives (Pile-of-Law), Wikidata gateway | `provider-manufacturing` |
-| **B-Prov** | Provider | News corpus (CNN/DailyMail, Hacker News) | `provider-qna` |
-| **B-Cons** | Consumer | News Syndicate consumer role (dual-role) | `consumer` (shared) |
-| **C** | Consumer | AI Lab — acquires training data, FL coordinator | `consumer` |
-| **D** | Catalog | Federated catalog — crawls all providers | `catalog-server` |
+The participant roles are implemented as follows:
+
+- **Node A**: A provider representing Legal Archives. It publishes legal training datasets and the Wikidata gateway through the `provider-manufacturing` connector.
+- **Node B-Prov**: A provider role for the News Syndicate. It publishes news datasets through the `provider-qna` connector.
+- **Node B-Cons**: A consumer role for the News Syndicate. It demonstrates that Node B can also acquire data from other providers. In this course deployment it reuses the `consumer` connector.
+- **Node C**: A consumer representing an AI Lab. It acquires training datasets and coordinates federated learning through the `consumer` connector.
+- **Node D**: A catalog node that crawls and aggregates provider catalogs through the `catalog-server` connector.
 
 ### 3.3 Dual-Role Participant Strategy
 
@@ -149,15 +111,7 @@ All components are deployed in the `mvd` Kubernetes namespace via Terraform.
 
 ### 4.2 FedGen Data Backend
 
-The custom data backend (`data-backend/server.py`) is a lightweight Python HTTP server deployed as a Kubernetes pod. It serves as the data source behind EDC assets:
-
-| Route | Description | Source |
-|-------|-------------|--------|
-| `/legal/documents` | Static legal corpus sample | Local JSON file |
-| `/news/articles` | Static news corpus sample | Local JSON file |
-| `/legal/live` | Live academic papers on data privacy | OpenAlex API |
-| `/news/live` | Live tech news stories | Hacker News Algolia API |
-| `/thirdparty/wikidata` | Knowledge graph concepts (AI, privacy) | Wikidata SPARQL endpoint |
+The custom data backend (`data-backend/server.py`) is a lightweight Python HTTP server deployed as a Kubernetes pod. It serves as the data source behind EDC assets. The backend exposes five major routes. The `/legal/documents` route serves the static legal corpus sample from a local JSON file, while `/news/articles` serves the static news corpus sample. The `/legal/live` route retrieves live academic and legal papers from the OpenAlex API. The `/news/live` route retrieves live technology news from the Hacker News Algolia API. Finally, `/thirdparty/wikidata` queries the Wikidata SPARQL endpoint for knowledge graph entities related to AI, privacy, and cybersecurity.
 
 The backend implements:
 
@@ -220,31 +174,11 @@ The environment seed script (`scripts/seed_mvd.sh`) orchestrates the complete in
 
 ### 6.1 Technology Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Dataspace Runtime | Eclipse Dataspace Components (EDC) |
-| Container Orchestration | Kubernetes (k3d) |
-| Infrastructure as Code | Terraform |
-| Programming Languages | Python (automation, FL), Java (EDC), Bash (scripts) |
-| Identity | DIDs (`did:web`), Verifiable Credentials, DCP |
-| Policy Language | ODRL (Open Digital Rights Language) |
-| API Testing | Newman (Postman CLI) |
-| ML Framework | NumPy (pure implementation, no sklearn/PyTorch) |
+The technology stack combines Eclipse Dataspace Components (EDC) as the dataspace runtime, Kubernetes via k3d for container orchestration, and Terraform for infrastructure provisioning. Python is used for automation, the data backend, and federated learning, while the underlying EDC components are Java-based. Bash scripts handle deployment orchestration and seeding. Identity and trust are based on `did:web` identifiers, Verifiable Credentials, and the Decentralized Claims Protocol. Policies are expressed in ODRL, API workflows are tested with Newman, and the federated learning implementation uses NumPy without sklearn or PyTorch.
 
 ### 6.2 DCP Authentication Flow
 
-Every catalog query and contract negotiation involves the DCP authentication flow:
-
-```
-Consumer CP ──SI Token──▶ Provider CP ──PresentationQuery──▶ Consumer IH
-                                      ◀──VP (credentials)──┘
-                          [verify credentials + evaluate ODRL policy]
-             ◀──FINALIZED──┘
-```
-
-**Figure 2.** DCP authentication sequence during contract negotiation.
-
-The Consumer's Control Plane sends a Self-Issued (SI) Token to the Provider. The Provider sends a Presentation Query to the Consumer's Identity Hub, which returns a Verifiable Presentation containing the consumer's `MembershipCredential`. The Provider verifies this credential and evaluates the attached ODRL policy. If the policy is satisfied, the negotiation transitions to `FINALIZED`.
+Every catalog query and contract negotiation involves the DCP authentication flow. The consumer control plane sends a self-issued token to the provider control plane. The provider then sends a presentation query to the consumer Identity Hub. The Identity Hub returns a verifiable presentation containing the relevant credentials. The provider verifies those credentials, evaluates the ODRL policy, and finalizes the negotiation if the policy conditions are satisfied.
 
 ### 6.3 Policy Enforcement
 
@@ -264,33 +198,7 @@ After contract agreement, data transfer uses the `HttpData-PULL` pattern:
 
 ### 6.5 Federated Learning: FedAvg Algorithm
 
-The FedAvg implementation follows McMahan et al. [6]:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│              Federated Averaging (FedAvg)                │
-│                                                          │
-│  ┌─────────────────┐    ┌──────────────────────────┐    │
-│  │  Coordinator     │    │  For each round r:       │    │
-│  │  (Node C)        │───▶│                          │    │
-│  │  Initialize w₀   │    │  1. Distribute wᵣ to     │    │
-│  └─────────────────┘    │     all nodes             │    │
-│                          │                          │    │
-│  ┌─────────────────┐    │  2. Each node k trains    │    │
-│  │  Node A (Legal)  │    │     locally for E epochs: │    │
-│  │  Local SGD on    │    │     wₖ ← SGD(wᵣ, Dₖ)   │    │
-│  │  legal texts     │    │                          │    │
-│  └─────────────────┘    │  3. Aggregate:            │    │
-│                          │     wᵣ₊₁ = Σ(nₖ/n)·wₖ  │    │
-│  ┌─────────────────┐    │                          │    │
-│  │  Node B (News)   │    │  4. Evaluate on test set │    │
-│  │  Local SGD on    │    │                          │    │
-│  │  news articles   │    └──────────────────────────┘    │
-│  └─────────────────┘                                     │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Figure 3.** FedAvg training loop across Node A and Node B, coordinated by Node C.
+The FedAvg implementation follows McMahan et al. [6]. Node C initializes the global model weights and distributes them to the participating nodes. Node A trains locally on legal text data, while Node B trains locally on news text data. After each local training round, the nodes return only updated model parameters. Node C aggregates these updates by weighted averaging according to each node's sample count, updates the global model, and evaluates it on a shared test set.
 
 Key implementation details:
 
@@ -301,50 +209,18 @@ Key implementation details:
 
 ### 6.6 Project Structure
 
-```
-fedgen/
-├── README.md                        # Project documentation
-├── fedgen.md                        # Original project proposal
-├── requirements.txt                 # Python dependencies (requests, numpy)
-├── run_demo.sh                      # Main demo entry point
-├── run_fl_demo.sh                   # FL-only demo
-├── run_thirdparty_demo.sh           # Third-party DB demo
-├── run_full_transfer.sh             # Postman-based transfer demo
-├── configs/
-│   └── endpoints.py                 # Node-to-connector endpoint mapping
-├── data/
-│   ├── legal_sample.json            # Static legal corpus (3 documents)
-│   └── news_sample.json             # Static news corpus (4 articles)
-├── data-backend/
-│   ├── Dockerfile                   # Container image definition
-│   └── server.py                    # HTTP server (static + live APIs + SPARQL)
-├── deployment/
-│   ├── provider.tf                  # Terraform provider config
-│   └── data-backend.tf              # K8s deployment for data backend
-├── docs/
-│   ├── final_report.md              # This report
-│   ├── presentation_script.md       # Presentation speaking notes
-│   └── troubleshooting-403-unauthorized.md  # Debug guide
-├── fl/
-│   ├── __init__.py                  # FL module init
-│   ├── model.py                     # Logistic regression (NumPy)
-│   ├── data_utils.py                # TF-IDF vectorizer + data processing
-│   ├── fedavg.py                    # FedAvg algorithm
-│   └── fl_demo.py                   # Standalone FL demo
-├── postman/
-│   ├── FedGen.postman_collection.json
-│   └── FedGen_FullTransfer.postman_collection.json
-└── scripts/
-    ├── fedgen_client.py             # EDC Management API client
-    ├── fedgen_demo.py               # Comprehensive 6-scenario demo
-    ├── demo_thirdparty_database.py  # Standalone: third-party DB demo
-    ├── demo_federated_learning.py   # Standalone: FL demo
-    ├── demo_c_to_a_transfer.py      # Single transfer demo
-    ├── full_http_transfer.py        # Full HTTP transfer script
-    ├── seed_mvd.sh                  # Environment seed script
-    ├── seed_identityhub.sh          # Identity Hub seed helper
-    └── setup_port_forward.sh        # K8s port-forward helper
-```
+The repository is organized around two major directories. The `fedgen/` directory contains the project-specific extension layer, including documentation, Python automation scripts, the data backend, sample datasets, deployment manifests, Postman collections, and the federated learning module. The `MinimumViableDataspace/` directory contains the Eclipse EDC MVD base that was modified and used as the underlying dataspace runtime.
+
+Within `fedgen/`, the most important files and directories are:
+
+- **Top-level scripts**: `run_demo.sh` runs the comprehensive demonstration; `run_fl_demo.sh` runs the federated learning demo; `run_thirdparty_demo.sh` runs the Wikidata third-party database demo; `run_full_transfer.sh` runs the Postman-based transfer demo.
+- **Configuration**: `configs/endpoints.py` maps FedGen logical nodes to EDC connector endpoints.
+- **Data**: `data/legal_sample.json` and `data/news_sample.json` provide static sample corpora.
+- **Data backend**: `data-backend/server.py` implements the HTTP server for static datasets, live API proxying, and Wikidata SPARQL access; `data-backend/Dockerfile` defines its container image.
+- **Deployment**: `deployment/data-backend.tf` deploys the FedGen backend into Kubernetes.
+- **Documentation**: `docs/final_report.md` is this report; `docs/presentation_script.md` contains presentation notes; `docs/troubleshooting-403-unauthorized.md` documents DCP authentication debugging.
+- **Federated learning**: the `fl/` package contains the NumPy logistic regression model, TF-IDF vectorizer, FedAvg implementation, and demo entry point.
+- **Automation scripts**: `scripts/fedgen_client.py` wraps the EDC Management API; `scripts/fedgen_demo.py` runs all six scenarios; `scripts/seed_mvd.sh` initializes Identity Hubs, participants, STS secrets, and base data.
 
 ---
 
@@ -382,91 +258,16 @@ Node A exposes Wikidata as an EDC-governed asset. Node C discovers, negotiates, 
 
 ### 8.1 Full Demo Run (All 6 Scenarios)
 
-The complete demonstration (`bash run_demo.sh`) executes all six scenarios sequentially. Below is a representative summary output from a successful test run:
+The complete demonstration (`bash run_demo.sh`) executes all six scenarios sequentially. A successful run verifies the following outcomes:
 
-```
-**********************************************************************
-  FedGen - Sovereign Dataspace for Decentralized AI Training
-**********************************************************************
+- **Scenario 1**: Node A registers legal datasets, creates the membership-based access policy, creates contract definitions, and Node C discovers the legal corpus through a catalog query. The contract negotiation reaches `FINALIZED`, the transfer reaches `STARTED`, and Node C obtains an EDR endpoint plus an authorization token.
+- **Scenario 2**: Node B registers static and live news assets, creates separate access and contract policies, and Node C successfully discovers, negotiates, transfers, and obtains an EDR for the news corpus.
+- **Scenario 3**: Node C queries the federated catalog and discovers datasets across the federation.
+- **Scenario 4**: Node B's consumer role queries Node A, negotiates access to the legal corpus, starts a transfer, and obtains an EDR. This proves the dual-role participant behavior.
+- **Scenario 5**: The federated learning demo completes five FedAvg rounds. On the static sample data, the global model trains successfully and reports final accuracy after the federation rounds.
+- **Scenario 6**: Node A registers the Wikidata knowledge graph gateway as an EDC asset. Node C discovers it, negotiates a contract, starts a transfer, obtains an EDR, and retrieves real Wikidata records through the governed data path.
 
-======================================================================
-  Scenario 1: C → A  |  AI Lab acquires Legal Training Data
-======================================================================
-  ✓ Asset 'fedgen-legal-corpus' registered (static sample)
-  ✓ Asset 'fedgen-legal-live' registered (OpenAlex API)
-  ✓ Policy 'fedgen-legal-policy' created (requires MembershipCredential)
-  ✓ Contract 'fedgen-legal-contract' created (static)
-  ✓ Contract 'fedgen-legal-live-contract' created (live API)
-  ✓ Catalog returned 4 offer(s)
-  ✓ Found target asset: fedgen-legal-corpus
-  [negotiation] state: INITIAL → REQUESTING → AGREED → VERIFIED → FINALIZED
-  ✓ Contract Agreement: <agreement-id>
-  [transfer] state: INITIAL → PROVISIONING → REQUESTED → STARTED
-  ✓ EDR endpoint: http://consumer-dataplane:11002/api/public/
-  ✓ Authorization token obtained (488 chars)
-
-======================================================================
-  Scenario 2: C → B  |  AI Lab acquires News Corpus
-======================================================================
-  ✓ Asset 'fedgen-news-corpus' registered (static sample)
-  ✓ Asset 'fedgen-news-live' registered (Hacker News API)
-  ✓ Access policy created (MembershipCredential)
-  ✓ Contract policy created (DataAccess.level)
-  ✓ Catalog returned 4 offer(s)
-  ✓ Found target asset: fedgen-news-corpus
-  ✓ Contract Agreement: <agreement-id>
-  ✓ EDR endpoint obtained with authorization token
-
-======================================================================
-  Scenario 3: Federated Catalog Discovery via Node D
-======================================================================
-  ✓ Discovered datasets across the federation
-
-======================================================================
-  Scenario 4: B-Cons → A  |  News Syndicate acquires Legal Data
-======================================================================
-  ✓ B-Cons queries Node A catalog successfully
-  ✓ Contract negotiation FINALIZED
-  ✓ EDR obtained — Node B can now consume legal data
-
-======================================================================
-  Scenario 5: Federated Learning across the Dataspace
-======================================================================
-  Dataset: 7 samples (3 legal + 4 news)
-  Round 1/5: test_accuracy=0.5000
-  Round 2/5: test_accuracy=0.5000
-  Round 3/5: test_accuracy=1.0000
-  Round 4/5: test_accuracy=1.0000
-  Round 5/5: test_accuracy=1.0000
-  ✓ Global model accuracy: 100.0%
-  ✓ Training completed over 5 federation rounds
-
-======================================================================
-  Scenario 6: C → A (Wikidata)  |  Third-Party Database Access
-======================================================================
-  ✓ Asset 'fedgen-wikidata-kg' registered (Wikidata SPARQL)
-  ✓ Contract negotiation FINALIZED
-  ✓ Data retrieved successfully via EDR!
-  ✓ Source: Wikidata Query Service (SPARQL)
-  ✓ Records received: 5
-    artificial intelligence (Q11660): branch of computer science
-    machine learning (Q2539): study of algorithms improved through experience
-    data privacy (Q3624078): ...
-    General Data Protection Regulation (Q23894374): ...
-    cybersecurity (Q3510521): ...
-
-======================================================================
-  Demo Summary
-======================================================================
-  ✓  Scenario 1: C → A (Legal data transfer)
-  ✓  Scenario 2: C → B (News data transfer)
-  ✓  Scenario 3: Federated catalog discovery
-  ✓  Scenario 4: B-Cons → A (Dual-role demonstration)
-  ✓  Scenario 5: Federated learning (FedAvg)
-  ✓  Scenario 6: Third-party database access (Wikidata)
-
-  🎉 All scenarios completed successfully!
-```
+The final demo summary reports all six scenarios as completed successfully, including legal data transfer, news data transfer, federated catalog discovery, dual-role operation, federated learning, and third-party database access.
 
 ### 8.2 Standalone Demo A: Third-Party Database (Wikidata)
 
