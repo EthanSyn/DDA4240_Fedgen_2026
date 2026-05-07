@@ -1,0 +1,34 @@
+{
+  "documents": [
+    {
+      "id": "legal-001",
+      "title": "Contract Law Fundamentals",
+      "category": "contract_law",
+      "content": "A contract is a legally binding agreement between two or more parties. The essential elements of a valid contract include: offer, acceptance, consideration, capacity, and legality of purpose.",
+      "source": "Pile-of-Law Dataset Sample",
+      "license": "AI-Training-Permitted"
+    },
+    {
+      "id": "legal-002", 
+      "title": "Intellectual Property Rights Overview",
+      "category": "ip_law",
+      "content": "Intellectual property (IP) refers to creations of the mind, such as inventions, literary and artistic works, designs, and symbols. IP rights include patents, copyrights, trademarks, and trade secrets.",
+      "source": "Pile-of-Law Dataset Sample",
+      "license": "AI-Training-Permitted"
+    },
+    {
+      "id": "legal-003",
+      "title": "Data Protection Regulations",
+      "category": "data_privacy",
+      "content": "Data protection laws regulate the collection, storage, and processing of personal data. Key principles include lawfulness, fairness, transparency, purpose limitation, data minimization, and accountability.",
+      "source": "Pile-of-Law Dataset Sample",
+      "license": "AI-Training-Permitted"
+    }
+  ],
+  "metadata": {
+    "total_documents": 3,
+    "domain": "legal",
+    "provider": "Node-A-Legal-Archives",
+    "version": "1.0"
+  }
+}

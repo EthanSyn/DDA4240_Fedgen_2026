@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "FedGen - Legal Archives Demo",
+    "description": "Demo: Node C (AI Lab) requests legal data from Node A (Legal Archives)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {"key": "value", "value": "password", "type": "string"},
+      {"key": "key", "value": "X-Api-Key", "type": "string"}
+    ]
+  },
+  "variable": [
+    {"key": "NODE_A_HOST", "value": "http://127.0.0.1/provider-manufacturing/cp"},
+    {"key": "NODE_C_HOST", "value": "http://127.0.0.1/consumer/cp"},
+    {"key": "NODE_A_DSP", "value": "http://provider-manufacturing-controlplane:8082/api/dsp"}
+  ],
+  "item": [
+    {
+      "name": "Node A - Setup Legal Archives",
+      "item": [
+        {
+          "name": "Create Legal Dataset Asset",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@id\": \"legal-archives-001\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"FedGen Legal Archives - High-quality legal texts for AI training including contract law, IP law, and data privacy regulations.\",\n        \"name\": \"Legal Archives Training Dataset\",\n        \"contenttype\": \"application/json\",\n        \"fedgen:domain\": \"legal\",\n        \"fedgen:provider\": \"Node-A-Legal-Archives\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://jsonplaceholder.typicode.com/posts\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
+            },
+            "url": {"raw": "{{NODE_A_HOST}}/api/management/v3/assets", "host": ["{{NODE_A_HOST}}"], "path": ["api", "management", "v3", "assets"]}
+          }
+        },
+        {
+          "name": "Create AI Training Policy",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"PolicyDefinition\",\n    \"@id\": \"fedgen-ai-training-policy\",\n    \"policy\": {\n        \"@type\": \"Set\",\n        \"permission\": [{\n            \"action\": \"use\",\n            \"constraint\": {\n                \"leftOperand\": \"MembershipCredential\",\n                \"operator\": \"eq\",\n                \"rightOperand\": \"active\"\n            }\n        }]\n    }\n}"
+            },
+            "url": {"raw": "{{NODE_A_HOST}}/api/management/v3/policydefinitions", "host": ["{{NODE_A_HOST}}"], "path": ["api", "management", "v3", "policydefinitions"]}
+          }
+        },
+        {
+          "name": "Create Contract Definition",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"ContractDefinition\",\n    \"@id\": \"fedgen-legal-contract-def\",\n    \"accessPolicyId\": \"fedgen-ai-training-policy\",\n    \"contractPolicyId\": \"fedgen-ai-training-policy\",\n    \"assetsSelector\": {\n        \"operandLeft\": \"https://w3id.org/edc/v0.0.1/ns/id\",\n        \"operator\": \"=\",\n        \"operandRight\": \"legal-archives-001\"\n    }\n}"
+            },
+            "url": {"raw": "{{NODE_A_HOST}}/api/management/v3/contractdefinitions", "host": ["{{NODE_A_HOST}}"], "path": ["api", "management", "v3", "contractdefinitions"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Node C - Request Data from Node A",
+      "item": [
+        {
+          "name": "Query Node A Catalog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "console.log('Catalog response:', JSON.stringify(jsonData, null, 2));",
+                  "pm.test('Catalog query successful', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"counterPartyAddress\": \"{{NODE_A_DSP}}\",\n    \"counterPartyId\": \"did:web:provider-identityhub%3A7083:provider\",\n    \"protocol\": \"dataspace-protocol-http\"\n}"
+            },
+            "url": {"raw": "{{NODE_C_HOST}}/api/management/v3/catalog/request", "host": ["{{NODE_C_HOST}}"], "path": ["api", "management", "v3", "catalog", "request"]}
+          }
+        }
+      ]
+    }
+  ]
+}

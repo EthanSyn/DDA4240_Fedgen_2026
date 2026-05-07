@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Gradle
+.gradle/
+build/
+MinimumViableDataspace/.gradle/
+MinimumViableDataspace/build/
+MinimumViableDataspace/**/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime state
+fedgen/exported_vars.json
+
+# Large binary (kubectl deb package)
+*.deb

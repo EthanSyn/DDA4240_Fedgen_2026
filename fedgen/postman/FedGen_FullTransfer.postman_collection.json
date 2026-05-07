@@ -1,0 +1,531 @@
+{
+  "_": {
+    "postman_id": "0144f4dd-fc62-40b7-9387-1775a54f5af8"
+  },
+  "item": [
+    {
+      "id": "c8ca1c38-448d-4a62-b0fa-8c7ceaa2ad44",
+      "name": "1-Setup",
+      "item": [
+        {
+          "id": "5b4c43b5-024c-4246-a6fb-96b187bafbdf",
+          "name": "Create Legal Dataset Asset",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "assets"
+              ],
+              "host": [
+                "{{NODE_A_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@id\": \"{{ASSET_ID}}\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"FedGen Legal Archives - High-quality legal texts for AI training.\",\n        \"name\": \"Legal Archives Training Dataset\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://jsonplaceholder.typicode.com/posts\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "6af6225e-d7e5-4f7f-888b-d68092c6ba3f",
+          "name": "Create Policy",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "policydefinitions"
+              ],
+              "host": [
+                "{{NODE_A_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"PolicyDefinition\",\n    \"@id\": \"fedgen-policy\",\n    \"policy\": {\n        \"@type\": \"Set\",\n        \"permission\": [{\"action\": \"use\", \"constraint\": {\"leftOperand\": \"MembershipCredential\", \"operator\": \"eq\", \"rightOperand\": \"active\"}}]\n    }\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "5b262440-7831-4a77-a2b1-36435e73b34d",
+          "name": "Create Contract Definition",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "contractdefinitions"
+              ],
+              "host": [
+                "{{NODE_A_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"ContractDefinition\",\n    \"@id\": \"fedgen-contract-def\",\n    \"accessPolicyId\": \"fedgen-policy\",\n    \"contractPolicyId\": \"fedgen-policy\",\n    \"assetsSelector\": {\"operandLeft\": \"https://w3id.org/edc/v0.0.1/ns/id\", \"operator\": \"=\", \"operandRight\": \"{{ASSET_ID}}\"}\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "885f5ea0-9d7e-4292-997f-18e7ad924a5a",
+      "name": "2-Catalog",
+      "item": [
+        {
+          "id": "19652f9a-9616-4a6f-9af0-39d99466efb4",
+          "name": "Query Catalog",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "catalog",
+                "request"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"counterPartyAddress\": \"{{NODE_A_DSP}}\",\n    \"counterPartyId\": \"did:web:provider-identityhub%3A7083:provider\",\n    \"protocol\": \"dataspace-protocol-http\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "_": {
+                  "lastExecutionId": "b4ed8b19-c01b-411b-b6af-2024ae26fd17"
+                },
+                "id": "2f920f62-3de5-4255-a4cc-dd3a5e693664",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                  "var datasets = jsonData['dcat:dataset'];",
+                  "if (datasets) {",
+                  "    var ds = Array.isArray(datasets) ? datasets : [datasets];",
+                  "    for (var i = 0; i < ds.length; i++) {",
+                  "        if (ds[i]['@id'] === pm.collectionVariables.get('ASSET_ID')) {",
+                  "            var policy = ds[i]['odrl:hasPolicy'];",
+                  "            if (policy) {",
+                  "                pm.collectionVariables.set('OFFER_ID', policy['@id']);",
+                  "                console.log('Found offer:', policy['@id']);",
+                  "            }",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "6290ff77-916f-4c15-bbf2-088bfce60d0f",
+      "name": "3-Negotiate",
+      "item": [
+        {
+          "id": "b3d8fc9b-80dc-4192-9ea5-e52a5b660451",
+          "name": "Initiate Negotiation",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "contractnegotiations"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"ContractRequest\",\n    \"counterPartyAddress\": \"{{NODE_A_DSP}}\",\n    \"protocol\": \"dataspace-protocol-http\",\n    \"policy\": {\n        \"@context\": \"http://www.w3.org/ns/odrl.jsonld\",\n        \"@type\": \"Offer\",\n        \"@id\": \"{{OFFER_ID}}\",\n        \"assigner\": \"did:web:provider-identityhub%3A7083:provider\",\n        \"target\": \"{{ASSET_ID}}\",\n        \"permission\": [{\"action\": \"use\", \"constraint\": {\"leftOperand\": \"MembershipCredential\", \"operator\": \"eq\", \"rightOperand\": \"active\"}}]\n    }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5baf9164-724f-47ed-ae41-9a3ab0732dea",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                  "if (jsonData['@id']) {",
+                  "    pm.collectionVariables.set('NEGOTIATION_ID', jsonData['@id']);",
+                  "    console.log('Negotiation ID:', jsonData['@id']);",
+                  "}"
+                ],
+                "_lastExecutionId": "11c5b8c6-2761-4a2e-91c2-a68c411a2d60"
+              }
+            }
+          ]
+        },
+        {
+          "id": "145813cc-4bbb-411d-bd0b-58fb221c000f",
+          "name": "Get Negotiation Status",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "contractnegotiations",
+                "{{NEGOTIATION_ID}}"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "38e0f8d5-94fa-4add-bf71-ac44bb31e15e",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "console.log('Negotiation state:', jsonData.state);",
+                  "if (jsonData.contractAgreementId) {",
+                  "    pm.collectionVariables.set('CONTRACT_AGREEMENT_ID', jsonData.contractAgreementId);",
+                  "    console.log('Contract Agreement ID:', jsonData.contractAgreementId);",
+                  "}"
+                ],
+                "_lastExecutionId": "de69dfd4-49b0-4cd5-8f96-92b4bc00c58d"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "ffee6e64-0fa2-4ef1-8752-5da6f09a4d71",
+      "name": "4-Transfer",
+      "item": [
+        {
+          "id": "5a46d9e4-bb84-43da-9e0f-2f2b7a510c86",
+          "name": "Initiate Transfer",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "transferprocesses"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"@context\": [\"https://w3id.org/edc/connector/management/v0.0.1\"],\n    \"@type\": \"TransferRequest\",\n    \"connectorId\": \"did:web:provider-identityhub%3A7083:provider\",\n    \"counterPartyAddress\": \"{{NODE_A_DSP}}\",\n    \"contractId\": \"{{CONTRACT_AGREEMENT_ID}}\",\n    \"assetId\": \"{{ASSET_ID}}\",\n    \"protocol\": \"dataspace-protocol-http\",\n    \"transferType\": \"HttpData-PULL\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "79f95f0e-fe12-4d7c-986c-e66f810294ca",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                  "if (jsonData['@id']) {",
+                  "    pm.collectionVariables.set('TRANSFER_ID', jsonData['@id']);",
+                  "    console.log('Transfer ID:', jsonData['@id']);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "3ec6e028-39c1-4de3-b222-0c91004521ba",
+          "name": "Get Transfer Status",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "transferprocesses",
+                "{{TRANSFER_ID}}"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "d3ed8b02-a902-4f2f-aa40-16cf2da4bd13",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "console.log('Transfer state:', jsonData.state);"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "e791a2fe-bf2b-4a37-9106-37379e4b0cd1",
+      "name": "5-GetData",
+      "item": [
+        {
+          "id": "c57ded66-81a5-4e16-95ea-8392cd2f4500",
+          "name": "Get EDR",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "management",
+                "v3",
+                "edrs",
+                "{{TRANSFER_ID}}",
+                "dataaddress"
+              ],
+              "host": [
+                "{{NODE_C_HOST}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5f6e7b0d-faf0-4a21-8064-4d938a77959c",
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.endpoint) {",
+                  "    pm.collectionVariables.set('EDR_ENDPOINT', jsonData.endpoint);",
+                  "    console.log('EDR Endpoint:', jsonData.endpoint);",
+                  "}",
+                  "if (jsonData.authorization) {",
+                  "    pm.collectionVariables.set('EDR_TOKEN', jsonData.authorization);",
+                  "    console.log('Got authorization token');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "99065f69-98e4-4998-92e3-7f3482c446b5",
+          "name": "Pull Data via HTTP",
+          "request": {
+            "url": {
+              "host": [
+                "{{EDR_ENDPOINT}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{EDR_TOKEN}}"
+              }
+            ],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "548743bf-3de0-4a24-88a4-5bdde44a7379",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Data received', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "console.log('Data received! Length:', pm.response.text().length);"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "type": "string",
+        "value": "password",
+        "key": "value"
+      },
+      {
+        "type": "string",
+        "value": "X-Api-Key",
+        "key": "key"
+      }
+    ]
+  },
+  "event": [],
+  "variable": [
+    {
+      "type": "any",
+      "value": "http://127.0.0.1/provider-manufacturing/cp",
+      "key": "NODE_A_HOST"
+    },
+    {
+      "type": "any",
+      "value": "http://127.0.0.1/consumer/cp",
+      "key": "NODE_C_HOST"
+    },
+    {
+      "type": "any",
+      "value": "http://provider-manufacturing-controlplane:8082/api/dsp",
+      "key": "NODE_A_DSP"
+    },
+    {
+      "type": "any",
+      "value": "legal-archives-001",
+      "key": "ASSET_ID"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "OFFER_ID"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "NEGOTIATION_ID"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "CONTRACT_AGREEMENT_ID"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "TRANSFER_ID"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "EDR_ENDPOINT"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "EDR_TOKEN"
+    }
+  ],
+  "info": {
+    "_postman_id": "0144f4dd-fc62-40b7-9387-1775a54f5af8",
+    "name": "FedGen - Complete HTTP Transfer Demo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Full demo: Node C (AI Lab) negotiates contract and transfers data from Node A (Legal Archives)",
+      "type": "text/plain"
+    }
+  },
+  "name": "collection",
+  "_postman_variable_scope": "collection",
+  "_postman_exported_at": "2026-03-18T16:26:42.598Z",
+  "_postman_exported_using": "Newman/6.2.2"
+}

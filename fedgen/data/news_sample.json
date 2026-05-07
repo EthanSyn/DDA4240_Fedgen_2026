@@ -1,0 +1,46 @@
+{
+  "articles": [
+    {
+      "id": "news-001",
+      "headline": "Tech Giants Invest Billions in AI Infrastructure",
+      "category": "technology",
+      "content": "Major technology companies announced a combined investment of over $50 billion in artificial intelligence infrastructure, including new data centers optimized for AI workloads. The investments signal a continued arms race in the AI industry.",
+      "source": "CNN/Daily Mail Dataset Sample",
+      "published": "2024-06-15",
+      "license": "AI-Training-Permitted"
+    },
+    {
+      "id": "news-002",
+      "headline": "EU Parliament Passes Comprehensive AI Regulation Act",
+      "category": "policy",
+      "content": "The European Parliament has voted to approve the AI Act, the world's first comprehensive legal framework for artificial intelligence. The regulation categorizes AI systems by risk level and imposes strict requirements on high-risk applications.",
+      "source": "CNN/Daily Mail Dataset Sample",
+      "published": "2024-03-13",
+      "license": "AI-Training-Permitted"
+    },
+    {
+      "id": "news-003",
+      "headline": "Global Data Sovereignty Laws Reshape Cloud Computing",
+      "category": "technology",
+      "content": "New data sovereignty regulations across multiple jurisdictions are forcing cloud providers to rethink their infrastructure strategies. Companies must now ensure that data remains within national borders, driving investment in local data centers.",
+      "source": "CNN/Daily Mail Dataset Sample",
+      "published": "2024-07-22",
+      "license": "AI-Training-Permitted"
+    },
+    {
+      "id": "news-004",
+      "headline": "Open Source AI Models Challenge Proprietary Systems",
+      "category": "technology",
+      "content": "A new wave of open-source large language models is challenging the dominance of proprietary AI systems. Research labs and companies are releasing increasingly capable models under permissive licenses, democratizing access to advanced AI technology.",
+      "source": "CNN/Daily Mail Dataset Sample",
+      "published": "2024-08-05",
+      "license": "AI-Training-Permitted"
+    }
+  ],
+  "metadata": {
+    "total_articles": 4,
+    "domain": "news_media",
+    "provider": "Node-B-News-Syndicate",
+    "version": "1.0"
+  }
+}

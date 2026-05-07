@@ -1,0 +1,8 @@
+mirrors:
+  "docker.io":
+    endpoint:
+      - "https://docker.m.daocloud.io"
+      - "https://mirror.ccs.tencentyun.com"
+  "ghcr.io":
+    endpoint:
+      - "https://ghcr.nju.edu.cn"
