@@ -3,7 +3,10 @@
 **Course:** CSC4240/CSC6203 Data Spaces  
 **Author:** Yinuo Sheng (122090461)  
 **Date:** May 2026  
-**Repository:** https://github.com/EthanSyn/DDA4240_Fedgen_2026
+**Project Repository:** https://github.com/EthanSyn/DDA4240_Fedgen_2026  
+**Report File in Repository:** https://github.com/EthanSyn/DDA4240_Fedgen_2026/blob/main/fedgen/docs/final_report.md  
+**Main FedGen Source Directory:** https://github.com/EthanSyn/DDA4240_Fedgen_2026/tree/main/fedgen  
+**EDC MVD Base Directory:** https://github.com/EthanSyn/DDA4240_Fedgen_2026/tree/main/MinimumViableDataspace
 
 ---
 
@@ -485,9 +488,14 @@ Running `bash run_fl_demo.sh`:
 
 ### 8.4 Code Repository
 
-The complete source code is available at: **https://github.com/EthanSyn/DDA4240_Fedgen_2026**
+The complete source code and project materials are available in the following persistent GitHub repository:
 
-The repository includes all source files, configuration, deployment manifests, documentation, and sample data. No EDC source code is included — only the FedGen extension layer.
+- **Project repository**: https://github.com/EthanSyn/DDA4240_Fedgen_2026
+- **This final report**: https://github.com/EthanSyn/DDA4240_Fedgen_2026/blob/main/fedgen/docs/final_report.md
+- **FedGen implementation**: https://github.com/EthanSyn/DDA4240_Fedgen_2026/tree/main/fedgen
+- **Modified Eclipse EDC MVD base**: https://github.com/EthanSyn/DDA4240_Fedgen_2026/tree/main/MinimumViableDataspace
+
+The repository includes all workspace files required to inspect the project, including the FedGen extension layer, the modified Eclipse EDC Minimum Viable Dataspace base, configuration files, deployment manifests, documentation, and sample data.
 
 ---
 
